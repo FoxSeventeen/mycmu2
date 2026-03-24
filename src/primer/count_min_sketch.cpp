@@ -104,7 +104,7 @@ void CountMinSketch<KeyType>::Merge(const CountMinSketch<KeyType> &other) {
 template <typename KeyType>
 auto CountMinSketch<KeyType>::Count(const KeyType &item) const -> uint32_t {
   /** @TODO(student) 请实现该函数！ finished*/
-  int Min=0x3f3f3f3f;
+  uint32_t Min=std::numeric_limits<uint32_t>::max();
   for(uint32_t i=0;i<depth_;i++)
   {
     Min=std::min(Min,sketch_[i][hash_functions_[i](item)].load(std::memory_order_relaxed));
