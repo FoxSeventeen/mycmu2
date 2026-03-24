@@ -31,13 +31,18 @@ CountMinSketch<KeyType>::CountMinSketch(uint32_t width, uint32_t depth) : width_
   {
     throw std::invalid_argument("width and depth must be greater than 0");
   }
-  sketch_.resize(depth_);
+  sketch_.reserve(depth_);
   for(uint32_t i=0;i<depth_;i++)
   {
-    sketch_[i].resize(width_);
+    std::vector<std::atomic<uint32_t>> row(width_);
+    sketch_.push_back(std::move(row));
     for(uint32_t j=0;j<width_;j++)
     {
-      sketch_[i][j].store(0,std::memory_order_relaxed);
+      auto &row=sketch_.back();
+      for(uint32_t j=0;j<width_;j++)
+      {
+        row[j].store(0,std::memory_order_relaxed);
+      }
     }
   }
 
@@ -61,11 +66,11 @@ CountMinSketch<KeyType>::CountMinSketch(CountMinSketch &&other) noexcept : width
 template <typename KeyType>
 auto CountMinSketch<KeyType>::operator=(CountMinSketch &&other) noexcept -> CountMinSketch & {
   /** @TODO(student) 请实现该函数！ Finished*/
-  this.width_=other.width_;this.depth_=other.depth_;
-  this.sketch_=std::move(other.sketch_);
-  this.hash_functions_.reserve(depth_);
+  this->width_=other.width_;this.depth_=other.depth_;
+  this->sketch_=std::move(other.sketch_);
+  this->hash_functions_.reserve(depth_);
   for (size_t i = 0; i < depth_; i++) {
-    this.hash_functions_.push_back(this->HashFunction(i));
+    this->hash_functions_.push_back(this->HashFunction(i));
   }
   return *this;
 }
@@ -90,7 +95,6 @@ void CountMinSketch<KeyType>::Merge(const CountMinSketch<KeyType> &other) {
   {
     for(uint32_t j=0;j<width_;j++)
     {
-      size_t cur=other.sketch_[i][j];
       sketch_[i][j].fetch_add(other.sketch_[i][j],std::memory_order_relaxed);
     }
   }
@@ -101,9 +105,9 @@ template <typename KeyType>
 auto CountMinSketch<KeyType>::Count(const KeyType &item) const -> uint32_t {
   /** @TODO(student) 请实现该函数！ finished*/
   int Min=0x3f3f3f3f;
-  for(int i=0;i<depth_;i++)
+  for(uint32_t i=0;i<depth_;i++)
   {
-    Min=std::min(Min,sketch_[i][hash_functions_p[i](item)]);
+    Min=std::min(Min,sketch_[i][hash_functions_[i](item)]);
   }
   return Min;
 }
@@ -132,7 +136,7 @@ auto CountMinSketch<KeyType>::TopK(uint16_t k, const std::vector<KeyType> &candi
   }
   std::sort(result.begin(),result.end(),[](const auto &a,const auto &b)-> bool {
     return a.second > b.second;
-  })
+  });
   if(result.size()>k)result.resize(k);
   return result;
 }

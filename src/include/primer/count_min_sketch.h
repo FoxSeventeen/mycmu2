@@ -79,11 +79,11 @@ class CountMinSketch {
   auto TopK(uint16_t k, const std::vector<KeyType> &candidates) -> std::vector<std::pair<KeyType, uint32_t>>;
 
  private:
-  std::vector<std::vector<std::atomic<uint32_t>>> sketch_;//矩阵
   /** count-min sketch 矩阵的维度 */
   uint32_t width_;  // 每个哈希函数对应的桶数量
   uint32_t depth_;  // 独立哈希函数的数量
   /** 为每一行预先计算好的哈希函数 */
+  std::vector<std::vector<std::atomic<uint32_t>>> sketch_;//矩阵
   std::vector<std::function<size_t(const KeyType &)>> hash_functions_;
 
   /** @spring2026 请不要修改以下内容 */
