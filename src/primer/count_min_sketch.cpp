@@ -66,7 +66,7 @@ CountMinSketch<KeyType>::CountMinSketch(CountMinSketch &&other) noexcept : width
 template <typename KeyType>
 auto CountMinSketch<KeyType>::operator=(CountMinSketch &&other) noexcept -> CountMinSketch & {
   /** @TODO(student) 请实现该函数！ Finished*/
-  this->width_=other.width_;this.depth_=other.depth_;
+  this->width_=other.width_;this->depth_=other.depth_;
   this->sketch_=std::move(other.sketch_);
   this->hash_functions_.reserve(depth_);
   for (size_t i = 0; i < depth_; i++) {
@@ -107,7 +107,7 @@ auto CountMinSketch<KeyType>::Count(const KeyType &item) const -> uint32_t {
   int Min=0x3f3f3f3f;
   for(uint32_t i=0;i<depth_;i++)
   {
-    Min=std::min(Min,sketch_[i][hash_functions_[i](item)]);
+    Min=std::min(Min,sketch_[i][hash_functions_[i](item)].load(std::memory_order_relaxed));
   }
   return Min;
 }
